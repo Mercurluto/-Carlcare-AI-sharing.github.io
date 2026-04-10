@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transformer 入门超轻指南 · CarlcareAI 科普</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* CarlCare 品牌色 */
+      --carl-blue: #2563eb;
+      --carl-blue-light: #3b82f6;
+      --carl-blue-dark: #1d4ed8;
+      --carl-purple: #667eea;
+      --white: #ffffff;
+      --white-glass: rgba(255, 255, 255, 0.85);
+      --white-glass-strong: rgba(255, 255, 255, 0.95);
+      
+      /* Glassmorphism 效果 */
+      --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.6);
+      --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+      --glass-shadow-hover: 0 20px 60px rgba(31, 38, 135, 0.2);
+      --backdrop-blur: blur(20px);
+      --backdrop-blur-strong: blur(30px);
+      
+      /* 文本颜色 */
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-light: rgba(255, 255, 255, 0.8);
+      --text-light-dim: rgba(255, 255, 255, 0.6);
+      
+      /* 强调色 */
+      --accent-gradient: linear-gradient(135deg, #2563eb 0%, #667eea 100%);
+      --success: #10b981;
+      --warning: #f59e0b;
+      
+      /* 间距 */
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      
+      /* 圆角 */
+      --radius-md: 0.5rem;
+      --radius-lg: 0.875rem;
+      --radius-xl: 1.25rem;
+      --radius-2xl: 1.75rem;
+      --radius-full: 9999px;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 40%, #667eea 100%);
+      background-size: 200% 200%;
+      animation: gradientFlow 20s ease infinite;
+      min-height: 100vh;
+      color: var(--text-primary);
+      line-height: 1.7;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientFlow {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* 背景装饰 */
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 0;
+      animation: float 25s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    body::before {
+      width: 800px;
+      height: 800px;
+      top: -300px;
+      right: -200px;
+    }
+
+    body::after {
+      width: 600px;
+      height: 600px;
+      bottom: -200px;
+      left: -150px;
+      animation-delay: -12s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(40px, -40px) scale(1.08); }
+      66% { transform: translate(-30px, 30px) scale(0.92); }
+    }
+
+    /* 内容容器 */
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 品牌头部 - Glassmorphism */
+    .brand-header {
+      background: var(--white-glass);
+      backdrop-filter: var(--backdrop-blur);
+      -webkit-backdrop-filter: var(--backdrop-blur);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+
+    .brand-header.scrolled {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: var(--backdrop-blur-strong);
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .brand-logo-img {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+      transition: transform 0.3s ease;
+    }
+
+    .brand-logo-img:hover {
+      transform: scale(1.05);
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 2px;
+    }
+
+    .brand-text p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .header-deco {
+      font-size: 2rem;
+      opacity: 0.7;
+      transition: transform 0.3s ease;
+    }
+
+    .header-deco:hover {
+      transform: rotate(15deg) scale(1.1);
+    }
+
+    /* Hero 区域 */
+    .hero {
+      text-align: center;
+      padding: var(--space-12) var(--space-6) var(--space-10);
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-5);
+      background: var(--white-glass);
+      backdrop-filter: var(--backdrop-blur);
+      -webkit-backdrop-filter: var(--backdrop-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--carl-blue);
+      margin-bottom: var(--space-6);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .hero-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: var(--space-4);
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+      line-height: 1.2;
+    }
+
+    .hero-meta {
+      font-size: 1.05rem;
+      color: var(--text-light);
+      max-width: 500px;
+      margin: 0 auto var(--space-8);
+      line-height: 1.7;
+    }
+
+    .hero-carl {
+      position: absolute;
+      bottom: -30px;
+      right: 10%;
+      width: 140px;
+      height: 140px;
+      opacity: 0.95;
+      animation: float 4s ease-in-out infinite;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.15));
+    }
+
+    /* 主容器 */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 var(--space-5) var(--space-12);
+      position: relative;
+    }
+
+    /* 文章卡片 - Glassmorphism 核心 */
+    .article-card {
+      background: var(--white-glass-strong);
+      backdrop-filter: var(--backdrop-blur-strong);
+      -webkit-backdrop-filter: var(--backdrop-blur-strong);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      margin-bottom: var(--space-6);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .article-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: var(--accent-gradient);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .article-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--glass-shadow-hover);
+    }
+
+    .article-card:hover::before {
+      opacity: 1;
+    }
+
+    .article-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+      margin-bottom: var(--space-8);
+      padding-bottom: var(--space-6);
+      border-bottom: 2px solid rgba(37, 99, 235, 0.08);
+    }
+
+    .article-icon {
+      width: 72px;
+      height: 72px;
+      flex-shrink: 0;
+      background: var(--accent-gradient);
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.25rem;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+      transition: transform 0.3s ease;
+    }
+
+    .article-card:hover .article-icon {
+      transform: scale(1.08) rotate(-5deg);
+    }
+
+    .article-title {
+      flex: 1;
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* 文章内容 */
+    .article-content {
+      font-size: 1.05rem;
+      line-height: 2;
+      color: var(--text-secondary);
+    }
+
+    .article-content h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: var(--space-10) 0 var(--space-5);
+      padding-left: var(--space-4);
+      border-left: 5px solid var(--carl-blue);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      line-height: 1.3;
+    }
+
+    .article-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: var(--space-8) 0 var(--space-4);
+      line-height: 1.3;
+    }
+
+    .article-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--carl-blue);
+      margin: var(--space-6) 0 var(--space-3);
+      line-height: 1.3;
+    }
+
+    .article-content p {
+      margin-bottom: var(--space-5);
+      text-align: justify;
+    }
+
+    .article-content strong {
+      color: var(--carl-blue);
+      font-weight: 600;
+    }
+
+    .article-content ul,
+    .article-content ol {
+      margin: var(--space-5) 0;
+      padding-left: var(--space-7);
+    }
+
+    .article-content li {
+      margin-bottom: var(--space-3);
+      position: relative;
+    }
+
+    .article-content ul li::marker {
+      color: var(--carl-blue);
+    }
+
+    .article-content ol li::marker {
+      color: var(--carl-blue);
+      font-weight: 600;
+    }
+
+    /* 信息框 - Glassmorphism */
+    .info-box {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(102, 126, 234, 0.08) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-left: 5px solid var(--carl-blue);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin: var(--space-7) 0;
+      border: 1px solid rgba(37, 99, 235, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .info-box:hover {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(102, 126, 234, 0.12) 100%);
+      transform: translateX(4px);
+    }
+
+    .info-box-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--carl-blue);
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      line-height: 1.3;
+    }
+
+    .info-box-content {
+      font-size: 0.98rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .info-box-content p {
+      margin-bottom: var(--space-3);
+    }
+
+    .info-box-content strong {
+      color: var(--carl-blue-dark);
+    }
+
+    /* 提示框 - Glassmorphism */
+    .tip-box {
+      background: linear-gradient(135deg, rgba(254, 243, 199, 0.6) 0%, rgba(253, 230, 138, 0.6) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      margin: var(--space-7) 0;
+      display: flex;
+      gap: var(--space-5);
+      align-items: flex-start;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .tip-box:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+    }
+
+    .tip-carl {
+      width: 88px;
+      height: 88px;
+      flex-shrink: 0;
+      background: var(--white);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .tip-content {
+      flex: 1;
+      padding-left: var(--space-4);
+      padding-top: var(--space-1);
+    }
+
+    .tip-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: var(--space-2);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .tip-text {
+      font-size: 0.98rem;
+      color: #78350f;
+      line-height: 1.8;
+    }
+
+    .tip-text strong {
+      color: #92400e;
+    }
+
+    /* 核心要点 - Glassmorphism */
+    .key-points {
+      background: var(--accent-gradient);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      margin: var(--space-8) 0;
+      color: var(--white);
+      box-shadow: 0 12px 40px rgba(37, 99, 235, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .key-points::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: shimmer 8s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .key-points-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      position: relative;
+    }
+
+    .key-points-list {
+      list-style: none;
+      padding: 0;
+      position: relative;
+    }
+
+    .key-points-list li {
+      padding: var(--space-3) 0 var(--space-3) var(--space-10);
+      position: relative;
+      font-size: 0.98rem;
+      line-height: 1.7;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      min-height: 48px;
+    }
+
+    .key-points-list li:last-child {
+      border-bottom: none;
+    }
+
+    .key-points-list li::before {
+      content: "⭐";
+      position: absolute;
+      left: 8px;
+      top: 10px;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    /* 品牌底部 - Glassmorphism */
+    .brand-footer {
+      text-align: center;
+      padding: var(--space-12) var(--space-6) var(--space-8);
+      background: var(--white-glass);
+      backdrop-filter: var(--backdrop-blur);
+      -webkit-backdrop-filter: var(--backdrop-blur);
+      border-top: 1px solid var(--glass-border);
+      margin-top: var(--space-10);
+    }
+
+    .footer-carl {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto var(--space-5);
+      opacity: 0.9;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.1));
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 1.05rem;
+    }
+
+    .footer-brand span:nth-child(2) {
+      color: var(--carl-blue);
+    }
+
+    .footer-slogan {
+      color: var(--carl-blue);
+      margin-bottom: var(--space-4);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .footer-meta {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    /* ========== 架构图解样式 ========== */
+    .diagram-container {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(102, 126, 234, 0.05) 100%);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      margin: var(--space-10) 0;
+      border: 2px dashed rgba(37, 99, 235, 0.2);
+      overflow-x: auto;
+    }
+
+    .diagram-title {
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--carl-blue);
+      margin-bottom: var(--space-5);
+      line-height: 1.3;
+    }
+
+    .diagram-svg {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* QKV 说明卡片 */
+    .qkv-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+      margin: var(--space-6) 0;
+    }
+
+    .qkv-card {
+      background: var(--white-glass);
+      backdrop-filter: var(--backdrop-blur);
+      -webkit-backdrop-filter: var(--backdrop-blur);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6) var(--space-5);
+      border: 1px solid rgba(37, 99, 235, 0.15);
+      text-align: center;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: var(--space-3);
+    }
+
+    .qkv-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+    }
+
+    .qkv-label {
+      font-size: 2.25rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: var(--space-1);
+    }
+
+    .qkv-card.q .qkv-label { color: #ef4444; }
+    .qkv-card.k .qkv-label { color: #22c55e; }
+    .qkv-card.v .qkv-label { color: #3b82f6; }
+
+    .qkv-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .qkv-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* 对比表格 */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: var(--space-6) 0;
+      background: var(--white-glass);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(37, 99, 235, 0.15);
+    }
+
+    .comparison-table th {
+      background: var(--accent-gradient);
+      color: var(--white);
+      padding: var(--space-4);
+      font-weight: 600;
+      text-align: left;
+    }
+
+    .comparison-table td {
+      padding: var(--space-4);
+      border-bottom: 1px solid rgba(37, 99, 235, 0.08);
+      color: var(--text-secondary);
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comparison-table tr:hover td {
+      background: rgba(37, 99, 235, 0.05);
+    }
+
+    /* 步骤流程 */
+    .steps-container {
+      counter-reset: step;
+      margin: var(--space-8) 0;
+    }
+
+    .steps-container {
+      counter-reset: step;
+      margin: var(--space-10) 0;
+    }
+
+    .step-item {
+      position: relative;
+      padding-left: 100px;
+      margin-bottom: var(--space-12);
+      min-height: 72px;
+    }
+
+    .step-item::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 56px;
+      height: 56px;
+      background: var(--accent-gradient);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--white);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .step-item h4 {
+      margin-bottom: var(--space-3);
+      padding-top: var(--space-2);
+      line-height: 1.4;
+      font-size: 1.15rem;
+    }
+
+    .step-item p {
+      margin-bottom: 0;
+      line-height: 1.8;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .brand-header {
+        padding: var(--space-3) var(--space-4);
+      }
+
+      .brand-logo-img {
+        width: 44px;
+        height: 44px;
+      }
+
+      .brand-text h1 {
+        font-size: 1.1rem;
+      }
+
+      .hero {
+        padding: var(--space-10) var(--space-4) var(--space-8);
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero-carl {
+        width: 100px;
+        height: 100px;
+        bottom: -20px;
+        right: var(--space-4);
+      }
+
+      .container {
+        padding: 0 var(--space-4) var(--space-8);
+      }
+
+      .article-card {
+        padding: var(--space-6);
+        border-radius: var(--radius-xl);
+      }
+
+      .article-header {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-4);
+      }
+
+      .article-icon {
+        width: 64px;
+        height: 64px;
+        font-size: 2rem;
+      }
+
+      .article-title {
+        font-size: 1.5rem;
+      }
+
+      .article-content h2 {
+        font-size: 1.3rem;
+      }
+
+      .tip-box {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .tip-carl {
+        width: 76px;
+        height: 76px;
+        font-size: 2.25rem;
+        margin-bottom: var(--space-3);
+      }
+
+      .tip-content {
+        padding-left: 0;
+        padding-top: 0;
+      }
+
+      .qkv-container {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+      }
+
+      .key-points-list li {
+        padding-left: var(--space-12);
+        min-height: auto;
+      }
+
+      .key-points-list li::before {
+        left: 10px;
+        top: 8px;
+      }
+
+      .step-item {
+        padding-left: 90px;
+        min-height: 64px;
+      }
+
+      .step-item::before {
+        width: 52px;
+        height: 52px;
+        font-size: 1.3rem;
+      }
+    }
+
+    /* 滚动进度条 */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: var(--accent-gradient);
+      z-index: 101;
+      transition: width 0.1s ease;
+    }
+  </style>
+</head>
+<body>
+  <!-- 滚动进度条 -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="page-wrapper">
+    <!-- 品牌头部 -->
+    <header class="brand-header" id="brandHeader">
+      <div class="brand-logo">
+        <img src="../03-素材/Carlcare-Logo.jpg" alt="Carlcare Logo" class="brand-logo-img">
+        <div class="brand-text">
+          <h1>CarlcareAI 科普</h1>
+          <p>让知识更智能</p>
+        </div>
+      </div>
+      <div class="header-deco">🤖</div>
+    </header>
+
+    <!-- Hero 区域 -->
+    <section class="hero">
+      <span class="hero-badge">📚 2026-04-09</span>
+      <h1>Transformer 入门超轻指南</h1>
+      <p class="hero-meta">给第一次接触 Transformer 的你——不背术语、不绕弯，直接用好懂的比喻讲清注意力机制</p>
+      <img src="../03-素材/卡尔 - 正面.png" alt="卡尔" class="hero-carl">
+    </section>
+
+    <!-- 主容器 -->
+    <div class="container">
+      <main>
+        <article class="article-card">
+          <header class="article-header">
+            <div class="article-icon">🧠</div>
+            <h2 class="article-title">Transformer 入门超轻指南</h2>
+          </header>
+
+          <div class="article-content">
+            <!-- 第一部分：引入 -->
+            <h2>🎯 什么是 Transformer？</h2>
+            <p>Transformer 是一种<strong>人工智能模型架构</strong>，它是现代大语言模型（如 GPT、BERT）的基础。简单来说，它让 AI 能够<strong>"理解"和"生成"人类语言</strong>。</p>
+
+            <div class="info-box">
+              <div class="info-box-title">💡 核心概念</div>
+              <div class="info-box-content">
+                <p>Transformer 的最大特点是<strong>"注意力机制"</strong>——就像你读书时会重点关注关键词一样，AI 也能"注意"到句子中最重要的部分。</p>
+                <p><strong>2017 年</strong>，Google 团队在论文《Attention Is All You Need》中首次提出 Transformer，彻底改变了自然语言处理领域。</p>
+              </div>
+            </div>
+
+            <!-- 第二部分：注意力机制详解 -->
+            <h2>👀 注意力机制到底是什么？</h2>
+            
+            <h3>📖 一个生动的比喻</h3>
+            <p>想象你在读这句话：<strong>"小明因为生病了，所以没去上学"</strong></p>
+            <p>当 AI 处理"所以"这个词时，它需要<strong>"注意"</strong>到前面的"因为"——因为这两个词是关联的。注意力机制就是让 AI 学会<strong>找到词语之间的关系</strong>。</p>
+
+            <h4>传统方法 vs 注意力机制</h4>
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>对比项</th>
+                  <th>传统 RNN 模型</th>
+                  <th>Transformer 注意力机制</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>处理方式</strong></td>
+                  <td>一个词一个词顺序读</td>
+                  <td>所有词同时看</td>
+                </tr>
+                <tr>
+                  <td><strong>理解关联</strong></td>
+                  <td>只能看相邻的词</td>
+                  <td>一眼看出任意两个词的关系</td>
+                </tr>
+                <tr>
+                  <td><strong>处理长句子</strong></td>
+                  <td>读到后面忘了前面</td>
+                  <td>再长也能找到关联</td>
+                </tr>
+                <tr>
+                  <td><strong>速度</strong></td>
+                  <td>慢（必须按顺序）</td>
+                  <td>快（可以并行处理）</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- QKV 图解 -->
+            <h3>🔑 Q、K、V 到底是什么？</h3>
+            <p>注意力机制的核心是三个角色：<strong>Query（查询）、Key（键）、Value（值）</strong>。听起来很抽象？我们用一个例子来说明：</p>
+
+            <div class="qkv-container">
+              <div class="qkv-card q">
+                <div class="qkv-label">Q</div>
+                <div class="qkv-name">Query 查询</div>
+                <div class="qkv-desc">"我在找什么？"<br>比如：找"因为"</div>
+              </div>
+              <div class="qkv-card k">
+                <div class="qkv-label">K</div>
+                <div class="qkv-name">Key 键</div>
+                <div class="qkv-desc">"我是什么？"<br>每个词的"标签"</div>
+              </div>
+              <div class="qkv-card v">
+                <div class="qkv-label">V</div>
+                <div class="qkv-name">Value 值</div>
+                <div class="qkv-desc">"我真正的内容"<br>词的实际含义</div>
+              </div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-box-title">💡 图书馆检索比喻</div>
+              <div class="info-box-content">
+                <p><strong>Query（查询）</strong> = 你想找的书名（比如"机器学习"）</p>
+                <p><strong>Key（键）</strong> = 书架上每本书的标签</p>
+                <p><strong>Value（值）</strong> = 书的实际内容</p>
+                <p><strong>注意力计算</strong> = 用查询匹配标签，找到最相关的书，然后读取内容</p>
+              </div>
+            </div>
+
+            <!-- 架构图解 -->
+            <h2>🏗️ Transformer 架构长什么样？</h2>
+            
+            <div class="diagram-container">
+              <div class="diagram-title">Transformer 整体架构图</div>
+              <svg class="diagram-svg" viewBox="0 0 600 700" xmlns="http://www.w3.org/2000/svg">
+                <!-- 背景 -->
+                <rect width="600" height="700" fill="rgba(255,255,255,0.5)" rx="16"/>
+                
+                <!-- Encoder 部分 -->
+                <g transform="translate(50, 50)">
+                  <rect width="220" height="280" fill="rgba(37, 99, 235, 0.1)" rx="12" stroke="#2563eb" stroke-width="2" stroke-dasharray="8,4"/>
+                  <text x="110" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#1d4ed8">编码器 Encoder</text>
+                  <text x="110" y="50" text-anchor="middle" font-size="12" fill="#64748b">理解输入句子</text>
+                  
+                  <!-- 输入 -->
+                  <rect x="40" y="70" width="140" height="40" fill="white" rx="8" stroke="#2563eb" stroke-width="2"/>
+                  <text x="110" y="95" text-anchor="middle" font-size="14" fill="#1e293b">输入文本</text>
+                  
+                  <!-- 自注意力层 -->
+                  <rect x="40" y="130" width="140" height="40" fill="linear-gradient(135deg, #2563eb, #667eea)" rx="8" stroke="#2563eb" stroke-width="2"/>
+                  <text x="110" y="155" text-anchor="middle" font-size="14" fill="white">自注意力层</text>
+                  
+                  <!-- 前馈网络 -->
+                  <rect x="40" y="190" width="140" height="40" fill="white" rx="8" stroke="#2563eb" stroke-width="2"/>
+                  <text x="110" y="215" text-anchor="middle" font-size="14" fill="#1e293b">前馈神经网络</text>
+                  
+                  <!-- 箭头 -->
+                  <line x1="110" y1="110" x2="110" y2="130" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  <line x1="110" y1="170" x2="110" y2="190" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowhead)"/>
+                </g>
+                
+                <!-- Decoder 部分 -->
+                <g transform="translate(330, 50)">
+                  <rect width="220" height="280" fill="rgba(102, 126, 234, 0.1)" rx="12" stroke="#667eea" stroke-width="2" stroke-dasharray="8,4"/>
+                  <text x="110" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#667eea">解码器 Decoder</text>
+                  <text x="110" y="50" text-anchor="middle" font-size="12" fill="#64748b">生成输出句子</text>
+                  
+                  <!-- 掩码自注意力 -->
+                  <rect x="40" y="70" width="140" height="40" fill="white" rx="8" stroke="#667eea" stroke-width="2"/>
+                  <text x="110" y="95" text-anchor="middle" font-size="14" fill="#1e293b">掩码自注意力</text>
+                  
+                  <!-- 交叉注意力 -->
+                  <rect x="40" y="130" width="140" height="40" fill="white" rx="8" stroke="#667eea" stroke-width="2"/>
+                  <text x="110" y="155" text-anchor="middle" font-size="14" fill="#1e293b">交叉注意力</text>
+                  
+                  <!-- 前馈网络 -->
+                  <rect x="40" y="190" width="140" height="40" fill="white" rx="8" stroke="#667eea" stroke-width="2"/>
+                  <text x="110" y="215" text-anchor="middle" font-size="14" fill="#1e293b">前馈神经网络</text>
+                  
+                  <!-- 箭头 -->
+                  <line x1="110" y1="110" x2="110" y2="130" stroke="#667eea" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  <line x1="110" y1="170" x2="110" y2="190" stroke="#667eea" stroke-width="2" marker-end="url(#arrowhead)"/>
+                </g>
+                
+                <!-- 连接 Encoder 和 Decoder -->
+                <path d="M 160 330 L 440 330" stroke="#2563eb" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrowhead)"/>
+                <text x="300" y="320" text-anchor="middle" font-size="12" fill="#64748b">传递编码信息</text>
+                
+                <!-- 输出 -->
+                <g transform="translate(200, 380)">
+                  <rect x="40" y="0" width="160" height="50" fill="url(#gradient)" rx="12" stroke="#2563eb" stroke-width="2"/>
+                  <text x="120" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="white">输出结果</text>
+                </g>
+                
+                <!-- 多头注意力说明 -->
+                <g transform="translate(50, 480)">
+                  <rect width="500" height="140" fill="rgba(16, 185, 129, 0.08)" rx="12" stroke="#10b981" stroke-width="2"/>
+                  <text x="250" y="30" text-anchor="middle" font-size="14" font-weight="bold" fill="#059669">💡 多头注意力（Multi-Head Attention）</text>
+                  <text x="250" y="55" text-anchor="middle" font-size="12" fill="#64748b">就像同时用多个角度理解句子</text>
+                  
+                  <!-- 多个头 -->
+                  <g transform="translate(50, 70)">
+                    <circle cx="30" cy="30" r="20" fill="#ef4444" opacity="0.8"/>
+                    <text x="30" y="35" text-anchor="middle" font-size="10" fill="white">头 1</text>
+                    <text x="30" y="55" text-anchor="middle" font-size="10" fill="#64748b">语法关系</text>
+                  </g>
+                  <g transform="translate(150, 70)">
+                    <circle cx="30" cy="30" r="20" fill="#22c55e" opacity="0.8"/>
+                    <text x="30" y="35" text-anchor="middle" font-size="10" fill="white">头 2</text>
+                    <text x="30" y="55" text-anchor="middle" font-size="10" fill="#64748b">语义关系</text>
+                  </g>
+                  <g transform="translate(250, 70)">
+                    <circle cx="30" cy="30" r="20" fill="#3b82f6" opacity="0.8"/>
+                    <text x="30" y="35" text-anchor="middle" font-size="10" fill="white">头 3</text>
+                    <text x="30" y="55" text-anchor="middle" font-size="10" fill="#64748b">位置关系</text>
+                  </g>
+                  <g transform="translate(350, 70)">
+                    <circle cx="30" cy="30" r="20" fill="#f59e0b" opacity="0.8"/>
+                    <text x="30" y="35" text-anchor="middle" font-size="10" fill="white">头 4</text>
+                    <text x="30" y="55" text-anchor="middle" font-size="10" fill="#64748b">情感关系</text>
+                  </g>
+                </g>
+                
+                <!-- 箭头定义 -->
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+                  </marker>
+                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#667eea;stop-opacity:1" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+
+            <h3>📦 编码器（Encoder）—— 理解输入</h3>
+            <p>编码器由 <strong>6 个相同的层</strong> 堆叠而成，每层包含两个子层：</p>
+            <ul>
+              <li><strong>自注意力层</strong>：让每个词都能看到句子中的所有其他词，理解它们之间的关系</li>
+              <li><strong>前馈神经网络</strong>：对注意力层的输出进行进一步处理</li>
+            </ul>
+
+            <h3>📤 解码器（Decoder）—— 生成输出</h3>
+            <p>解码器也有 <strong>6 个相同的层</strong>，但比编码器多了一个子层：</p>
+            <ul>
+              <li><strong>掩码自注意力层</strong>：只能看到前面的词，不能偷看后面的（防止作弊）</li>
+              <li><strong>交叉注意力层</strong>：关注编码器的输出，理解输入句子的含义</li>
+              <li><strong>前馈神经网络</strong>：进一步处理信息</li>
+            </ul>
+
+            <div class="info-box">
+              <div class="info-box-title">🎭 为什么需要掩码（Mask）？</div>
+              <div class="info-box-content">
+                <p>想象你在做翻译题，如果提前看到了答案，就没法真正学习了。掩码机制就是<strong>遮住未来的词</strong>，让解码器只能根据已知的部分预测下一个词。</p>
+              </div>
+            </div>
+
+            <h2>📍 位置编码（Positional Encoding）</h2>
+            <p>Transformer 不像 RNN 那样按顺序处理词，所以它<strong>不知道词的位置</strong>。为了解决这个问题，科学家给每个词加了一个"位置标签"。</p>
+
+            <div class="tip-box">
+              <div class="tip-carl">🤖</div>
+              <div class="tip-content">
+                <div class="tip-title">💡 卡尔小贴士</div>
+                <div class="tip-text">
+                  <p>位置编码就像给每个词发了一个<strong>带号码的名牌</strong>："我是第 1 个词"、"我是第 2 个词"……这样 Transformer 就能知道词的顺序了！</p>
+                </div>
+              </div>
+            </div>
+
+            <h2>✨ 为什么 Transformer 这么强？</h2>
+            <div class="steps-container">
+              <div class="step-item">
+                <h4>并行处理，速度超快</h4>
+                <p>一句话所有词同时处理，不用像 RNN 那样一个接一个读，训练速度提升数十倍。</p>
+              </div>
+              <div class="step-item">
+                <h4>长距离关联，不再遗忘</h4>
+                <p>不管句子多长，任意两个词都能直接建立联系，解决了"读到后面忘了前面"的问题。</p>
+              </div>
+              <div class="step-item">
+                <h4>多头注意力，多角度理解</h4>
+                <p>同时用多个"注意力头"从不同角度理解句子（语法、语义、位置、情感等），理解更全面。</p>
+              </div>
+              <div class="step-item">
+                <h4>灵活通用，处处能用</h4>
+                <p>翻译、写作、问答、摘要、代码生成……几乎能处理所有序列到序列的任务。</p>
+              </div>
+            </div>
+
+            <h2>🚀 实际应用：哪些模型用了 Transformer？</h2>
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>模型</th>
+                  <th>公司</th>
+                  <th>特点</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>BERT</strong></td>
+                  <td>Google</td>
+                  <td>双向编码，擅长理解上下文</td>
+                </tr>
+                <tr>
+                  <td><strong>GPT 系列</strong></td>
+                  <td>OpenAI</td>
+                  <td>单向解码，擅长生成文本</td>
+                </tr>
+                <tr>
+                  <td><strong>T5</strong></td>
+                  <td>Google</td>
+                  <td>统一框架，所有任务都是"文本到文本"</td>
+                </tr>
+                <tr>
+                  <td><strong>Llama</strong></td>
+                  <td>Meta</td>
+                  <td>开源大模型，性能强劲</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h2>🎓 从 0 到会用：学习路线</h2>
+            <ol>
+              <li><strong>理解概念</strong>：搞懂注意力机制、编码器、解码器的作用</li>
+              <li><strong>动手实践</strong>：用 Hugging Face 调用现成的 Transformer 模型</li>
+              <li><strong>学习框架</strong>：掌握 PyTorch 或 TensorFlow 实现简单的注意力机制</li>
+              <li><strong>阅读论文</strong>：挑战《Attention Is All You Need》原文</li>
+              <li><strong>深入原理</strong>：学习 QKV 计算、多头注意力、位置编码的数学推导</li>
+            </ol>
+
+            <div class="tip-box">
+              <div class="tip-carl">🤖</div>
+              <div class="tip-content">
+                <div class="tip-title">💡 卡尔小贴士</div>
+                <div class="tip-text">
+                  <p>Transformer 的核心思想就一个：<strong>"让 AI 学会关注重点"</strong>。就像你划重点复习一样，AI 也学会了哪些词更重要！</p>
+                  <p>记住这个核心，再复杂的细节都能慢慢理解。加油！💪</p>
+                </div>
+              </div>
+            </div>
+
+            <section class="key-points">
+              <h3 class="key-points-title">⭐ 核心要点</h3>
+              <ul class="key-points-list">
+                <li>Transformer 是现代 AI 大模型的基础架构，2017 年由 Google 提出</li>
+                <li>注意力机制让 AI 能找到词语之间的关联，不再"读了后面忘前面"</li>
+                <li>QKV = Query（查询）+ Key（键）+ Value（值），像图书馆检索一样工作</li>
+                <li>编码器负责理解输入，解码器负责生成输出</li>
+                <li>多头注意力让模型从多个角度理解句子</li>
+                <li>位置编码告诉 Transformer 词的顺序</li>
+                <li>并行处理 + 长距离关联 = 超强能力</li>
+                <li>BERT、GPT、T5 等模型都基于 Transformer</li>
+              </ul>
+            </section>
+          </div>
+        </article>
+      </main>
+    </div>
+
+    <!-- 品牌底部 -->
+    <footer class="brand-footer">
+      <img src="../03-素材/卡尔 - 正面.png" alt="卡尔" class="footer-carl">
+      <div class="footer-brand">
+        <span>Carlcare Service</span>
+        <span>·</span>
+        <span>客户服务中心</span>
+      </div>
+      <p class="footer-slogan">让服务更智能 ❤</p>
+      <p class="footer-meta">2026-04-09 · CarlcareAI 科普 · 详解版</p>
+    </footer>
+  </div>
+
+  <script>
+    // 滚动进度条
+    window.addEventListener('scroll', () => {
+      const progressBar = document.getElementById('progressBar');
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrollPercent = (scrollTop / scrollHeight) * 100;
+      progressBar.style.width = scrollPercent + '%';
+
+      // 头部滚动效果
+      const header = document.getElementById('brandHeader');
+      if (scrollTop > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // 平滑滚动到锚点
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
